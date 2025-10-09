@@ -105,10 +105,19 @@ def create_constraints(filename):
         if isinstance(stmt, Assignment) and isinstance(stmt.rvalue, BinaryOp):
             term1 = stmt.lvalue.name
             r_val = stmt.rvalue
-            traverse(r_val)
-            print("todo")
+            r_terms = traverse_and_collect(r_val)
 
+            #Chain the constraints together
+            # [x] = [y] = [z]
 
+            constraint = Constraint(term1, r_terms[0].name)
+            constraints.append(constraint)
+            constraint.print()
+
+            for i in range(1, len(r_terms)):
+                constraint = Constraint(r_terms[i - 1].name, r_terms[i].name)
+                constraints.append(constraint)
+                constraint.print()
 
 #Will be useful for later when trying to find all of the items in side of a term?
 #TODO
@@ -116,21 +125,41 @@ def create_constraints(filename):
 #   index 0 is the list of id's
 #   index 1 is the list of operators
 #   index 2 constants
-def traverse(node):
+
+
+def traverse_and_collect(node):
+    ids = []
+    operators = []
+    constants = []
+
+    terms = []
+
+
+    traverse(node, terms)
+
+    return terms
+
+
+def traverse(node, terms):
     if isinstance(node, ID):
-        print(node.name)
+        #print(node.name)
+        terms.append(IDTerm(node.name))
         return
     if isinstance(node, Constant):
-        print(node.value)
+        #print(node.value)
+        terms.append(node.value)
         return
     #print the left node
-    traverse(node.left)
+    traverse(node.left, terms)
 
     # print itself
-    print(node.op)
+    #TODO: CHeck this:
+    # Don't really need to add the operator in the constraint?
+    #terms.append(node.op)
+    #print(node.op)
 
     #print the right node
-    traverse(node.right)
+    traverse(node.right, terms)
 
 if __name__ == "__main__":
     filename = "Trivial.c"
