@@ -65,6 +65,7 @@ class Constraint:
 
 def create_constraints(filename):
     stmts = Parse.get_all_statements(filename)
+    constraint = None
     constraints = []
     for stmt in stmts:
 
@@ -75,10 +76,6 @@ def create_constraints(filename):
             term1 = stmt.name
             term2 = stmt.type.type.names[0]
             constraint = Constraint(term1, term2)
-            constraints.append(constraint)
-            #print(f"[[{term1}]] = {term2}")
-            constraint.print()
-
 
         #Constant assignment (e.g: x = 5)
         #Looks like "[[x]] = [[5]]" in the book, but since [[5]] is int:
@@ -87,8 +84,6 @@ def create_constraints(filename):
             term1 = stmt.lvalue.name
             term2 = stmt.rvalue.type
             constraint = Constraint(term1, term2)
-            constraints.append(constraint)
-            constraint.print()
 
         #Typevar assignment (e.g: x = y)
         #Looks like [[x]] = [[y]]
@@ -96,8 +91,6 @@ def create_constraints(filename):
             term1 = stmt.lvalue.name
             term2 = stmt.rvalue.name
             constraint = Constraint(term1, term2)
-            constraints.append(constraint)
-            constraint.print()
 
         #Binary operation assignment (e.g: z = x + y)
         #Looks like [[z]] = [[x]] = [[y]] = [[x op y]]
@@ -118,12 +111,14 @@ def create_constraints(filename):
             # [x] = [y] = [z]
 
             constraint = Constraint(term1, r_terms[0].name)
-            constraints.append(constraint)
-            print("-- Start of chain for binary op --")
-            constraint.print()
+            duplicate_constraint = False
+
+            if not _constraint_exists(constraint, constraints):
+                constraints.append(constraint)
+                constraint.print()
 
             for i in range(1, len(r_terms)):
-                print(f"Got to iteration [{i}]")
+                #print(f"Got to iteration [{i}]")
                 curr_r_term_class = r_terms[i].__class__
                 prev_r_term_class = r_terms[i-1].__class__
                 constraint = ""
@@ -148,8 +143,14 @@ def create_constraints(filename):
 
                 else:
                     print("Error in parsing a binary operation.")
-                constraints.append(constraint)
-                constraint.print()
+
+                if not _constraint_exists(constraint, constraints):
+                    constraints.append(constraint)
+                    constraint.print()
+
+        if not _constraint_exists(constraint, constraints):
+            constraints.append(constraint)
+            constraint.print()
 
     return constraints
 
@@ -161,18 +162,22 @@ def create_constraints(filename):
 #   index 2 constants
 
 
+def _constraint_exists(new_constraint, existing_constraints):
+    duplicate_constraint = False
+    for existing_constraint in existing_constraints:
+        if existing_constraint.get_l_term().name == new_constraint.get_l_term().name and existing_constraint.get_r_term().name == new_constraint.get_r_term().name:
+            return True
+        elif existing_constraint.get_l_term().name == new_constraint.get_r_term().name and existing_constraint.get_r_term().name == new_constraint.get_l_term().name:
+            return True
+    return False
+
 def traverse_and_collect(node):
     ids = []
     operators = []
     constants = []
-
     terms = []
-
-
     traverse(node, terms)
-
     return terms
-
 
 def traverse(node, terms):
     if isinstance(node, ID):
@@ -199,4 +204,3 @@ if __name__ == "__main__":
     filename = "Trivial.c"
     all_constraints = create_constraints(filename)
     x = "stop"
-    print("balls")
