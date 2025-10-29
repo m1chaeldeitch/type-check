@@ -36,6 +36,13 @@ class ExpressionTerm(Term):
     def get_expr(self):
         return self.terms
 
+class LiteralTerm(Term):
+    def __init__(self, literal_type):
+        self.type = literal_type
+
+    def get_literal(self):
+        return self.type
+
 #TODO
 # Adjust so that I construct the terms before hand, then pass it into the constraint
 # constructor. This allows for more detail as to what kind of terms are present
@@ -53,7 +60,7 @@ class Constraint:
         return self.r_term
 
     def print(self):
-        print(f"Constraint: Type of {self.get_l_term().name} = type of {self.get_r_term().name}")
+        print(f"Constraint: [[{self.get_l_term().name}]] = [[{self.get_r_term().name}]]")
 
 
 def create_constraints(filename):
@@ -112,12 +119,39 @@ def create_constraints(filename):
 
             constraint = Constraint(term1, r_terms[0].name)
             constraints.append(constraint)
+            print("-- Start of chain for binary op --")
             constraint.print()
 
             for i in range(1, len(r_terms)):
-                constraint = Constraint(r_terms[i - 1].name, r_terms[i].name)
+                print(f"Got to iteration [{i}]")
+                curr_r_term_class = r_terms[i].__class__
+                prev_r_term_class = r_terms[i-1].__class__
+                constraint = ""
+
+                if curr_r_term_class == LiteralTerm and prev_r_term_class == LiteralTerm:
+                    # e.g: Int z = 3 + 3
+                    constraint = Constraint(r_terms[i - 1].type, r_terms[i].type)
+
+                elif curr_r_term_class == LiteralTerm and prev_r_term_class is not LiteralTerm:
+                    # e.g: Int z = x + 3
+                    constraint = Constraint(r_terms[i-1].name, r_terms[i].type)
+
+                elif curr_r_term_class != LiteralTerm and prev_r_term_class == LiteralTerm:
+                    # e.g: Int z = 3 + x
+                    #todo: For diagnosiing issues in the future, this might be a good start
+                    # the constriants here would be written as [[3]] = [[x]], which might be weird to deal with
+                    constraint = Constraint(r_terms[i-1].type, r_terms[i].name)
+
+                elif curr_r_term_class != LiteralTerm and prev_r_term_class != LiteralTerm:
+                    #e.g Int z = x + y
+                    constraint = Constraint(r_terms[i - 1].name, r_terms[i].name)
+
+                else:
+                    print("Error in parsing a binary operation.")
                 constraints.append(constraint)
                 constraint.print()
+
+    return constraints
 
 #Will be useful for later when trying to find all of the items in side of a term?
 #TODO
@@ -147,7 +181,7 @@ def traverse(node, terms):
         return
     if isinstance(node, Constant):
         #print(node.value)
-        terms.append(node.value)
+        terms.append(LiteralTerm(node.type))
         return
     #print the left node
     traverse(node.left, terms)
@@ -163,4 +197,6 @@ def traverse(node, terms):
 
 if __name__ == "__main__":
     filename = "Trivial.c"
-    create_constraints(filename)
+    all_constraints = create_constraints(filename)
+    x = "stop"
+    print("balls")
