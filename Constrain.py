@@ -10,9 +10,15 @@ import Parse
 class Term:
     def __init__(self, name):
         self.name = name
+        self.parent = None
 
     def get_name(self):
         return self.name
+
+    def __eq__(self, other):
+        if isinstance(other, Term):
+            return self.name == other.name
+        return False
 
 class TypeTerm(Term):
     def __init__(self, name):
@@ -22,6 +28,19 @@ class TypeTerm(Term):
         return self.name
 
 class IDTerm(Term):
+    _instances = {}
+
+    def __new__(cls, name):
+        # if we've already created a type-variable term (IDTerm) with the same
+        # name, then return that object instead.
+        # prevents different instances of the same term, which leads to issues in the unification process
+        if name in cls._instances and name not in C_TYPES:
+            return cls._instances[name]
+        else:
+            new_term = super().__new__(cls)
+            cls._instances[name] = new_term
+            return new_term
+
     def __init__(self, name):
         self.name = name
 
@@ -47,11 +66,21 @@ class LiteralTerm(Term):
 # Adjust so that I construct the terms before hand, then pass it into the constraint
 # constructor. This allows for more detail as to what kind of terms are present
 
+# A list of all of all c types
+C_TYPES = ["char", "int", "float", "double"]
+ID_TERMS = []
 # Probably another case for visitor pattern
 class Constraint:
     def __init__(self, l_val, r_val):
-        self.l_term = Term(l_val)
-        self.r_term = Term(r_val)
+        if l_val not in C_TYPES:
+            self.l_term = IDTerm(l_val)
+        else:
+            self.l_term = TypeTerm(l_val)
+
+        if r_val not in C_TYPES:
+            self.r_term = IDTerm(r_val)
+        else:
+            self.r_term = TypeTerm(r_val)
 
     def get_l_term(self):
         return self.l_term
