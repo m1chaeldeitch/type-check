@@ -144,7 +144,7 @@ def create_constraints(filename):
 
             if not _constraint_exists(constraint, constraints):
                 constraints.append(constraint)
-                constraint.print()
+                #constraint.print()
 
             for i in range(1, len(r_terms)):
                 #print(f"Got to iteration [{i}]")
@@ -175,11 +175,11 @@ def create_constraints(filename):
 
                 if not _constraint_exists(constraint, constraints):
                     constraints.append(constraint)
-                    constraint.print()
+                    #constraint.print()
 
         if not _constraint_exists(constraint, constraints):
             constraints.append(constraint)
-            constraint.print()
+           # constraint.print()
 
     return constraints
 
@@ -229,7 +229,7 @@ def traverse(node, terms):
     #print the right node
     traverse(node.right, terms)
 
-if __name__ == "__main__":
-    filename = "Trivial.c"
-    all_constraints = create_constraints(filename)
-    x = "stop"
+# if __name__ == "__main__":
+#     filename = "Trivial.c"
+#     all_constraints = create_constraints(filename)
+#     x = "stop"

@@ -68,6 +68,6 @@ def perform_unification(filename):
 
     return True
 
-if __name__ == "__main__":
-    filename = "Trivial.c"
-    print(f"\n\n{perform_unification(filename)}")
+# if __name__ == "__main__":
+#     filename = "Trivial.c"
+#     print(f"\n\n{perform_unification(filename)}")
